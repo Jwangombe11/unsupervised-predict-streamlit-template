@@ -139,3 +139,4 @@ cython_debug/
 
 #resources data files
 resources/data/**
+resources/Meeting Minutes/*.docx
