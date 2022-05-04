@@ -49,6 +49,8 @@ movies_df = pd.read_feather('resources/data/movies.feather')
 print(f"Time:{time.asctime(time.localtime())} : Start loading Train DataFrames")
 train_df = pd.read_feather('resources/data/train.feather')
 train_df.drop(['timestamp'], axis=1,inplace=True)
+MOVIE_INDICES = pd.Series(movies_df['title']) #MOVIE_INDICES- pandas series of the Movie titles
+
 
 print(f"Time:{time.asctime(time.localtime())} : Finish loading DataFrames")
 
@@ -62,7 +64,7 @@ print(f"Time:{time.asctime(time.localtime())} : Finish loading DataFrames")
 # We make use of an SVD model trained on a subset of the MovieLens 10k dataset.
 # model=pickle.load(open('resources/models/SVD.pkl', 'rb'))
 
-def prediction_item(item_id):
+def prediction_item(item_id, filter_train_df):
     """Map a given favourite movie to users within the
        MovieLens dataset with the same preference.
 
@@ -88,7 +90,7 @@ def prediction_item(item_id):
 
     movie_pred_df = pd.DataFrame(
     {
-        'userId':list(set(train_df['userId'].tolist()))
+        'userId':list(set(filter_train_df['userId'].tolist()))
     }
     )
 
@@ -120,14 +122,33 @@ def pred_movies(movie_list):
     """
     # Store the id of users
     # id_store=[]
-    id_store_df = pd.DataFrame()
 
     # For each movie selected by a user of the app,
     # predict a corresponding user within the dataset with the highest rating
+    filter_train_df = train_df.loc[(train_df['movieId'] == movies_df.loc[movies_df['title'] == movie_list[0],'movieId'].values[0]) \
+                                 & (train_df['rating'] > 3) | \
+                                    (train_df['movieId'] == movies_df.loc[movies_df['title'] == movie_list[1],'movieId'].values[0]) \
+                                        & (train_df['rating'] > 3) | \
+                                        (train_df['movieId'] == movies_df.loc[movies_df['title'] == movie_list[2],'movieId'].values[0]) \
+                                            & (train_df['rating'] > 3)
+                                        ,:]
+
+    #If too few users are available with the above specification
+    #ie. the movies are not rated highly
+    if filter_train_df.shape[0] < 3000:
+        filter_train_df = train_df.sample(n= 3500)
+
+    id_store_df = pd.DataFrame()
+
     for i in movie_list:
         print(f"Time:{time.asctime(time.localtime())} : Start Predictions for {i}")
 
-        prediction_df = prediction_item(item_id = i)
+        #Filter Train_df based on the ratings. ie. only consider users
+        # a >3 rating for the selected movies
+
+        prediction_df = prediction_item(item_id = i,
+                                        filter_train_df= filter_train_df)
+
         # predictions = prediction_df['prediction']
         # predictions = prediction_item(item_id = i)
         prediction_df.sort_values('prediction', ascending= False, inplace= True)
@@ -162,21 +183,25 @@ def collab_model(movie_list,top_n=10):
 
     """
 
-    indices = pd.Series(movies_df['title']) #indices- pandas series of the Movie titles
-    sim_user_ids = pred_movies(movie_list)['userId']     #sim_user_ids- holds a list of userIDs who rated the selected movies highly
+    # MOVIE_INDICES = pd.Series(movies_df['title']) #MOVIE_INDICES- pandas series of the Movie titles
+    sim_user_ids = set(pred_movies(movie_list)['userId'])     #sim_user_ids- holds a list of userIDs who rated the selected movies highly
     # df_init_users = ratings_df[ratings_df['userId']==sim_user_ids[0]]      #initializes the df_init_users DF
     df_init_users = pd.DataFrame()      #initializes the df_init_users DF
     print(f"Time:{time.asctime(time.localtime())} : Start Init Iteration")
 
-    for i in sim_user_ids:                                                #for each userID in movies_id,
-        df_init_users=df_init_users.append(train_df[train_df['userId']==i]) #Append their ratings to the df_init_users DF
+
+    df_init_users = train_df.loc[train_df['userId'].isin(sim_user_ids),:]
+    # for i in sim_user_ids:                                                #for each userID in movies_id,
+    #     df_init_users=df_init_users.append(train_df[train_df['userId']==i]) #Append their ratings to the df_init_users DF
     util_matrix = pd.pivot_table(df_init_users, index= 'userId', columns= 'movieId', values= 'rating')
-    print(f"Time:{time.asctime(time.localtime())} : Start Init Iteration")
+    print(f"Time:{time.asctime(time.localtime())} : Finished Init Iteration")
 
 
     #------------------------ 220430
 
     #Normalize each row
+    print(f"Time:{time.asctime(time.localtime())} : Finished Init Iteration")
+
     util_matrix_norm = util_matrix.apply(lambda x: (x - np.mean(x))/(np.max(x) - np.min(x)), axis= 1)
     util_matrix_norm.fillna(0, inplace= True)
     util_matrix_norm = util_matrix_norm.T
@@ -184,14 +209,20 @@ def collab_model(movie_list,top_n=10):
 
     util_matrix_sparse = sp.sparse.csr_matrix(util_matrix_norm.values)
 
-    user_similarity = cosine_similarity((util_matrix_sparse.T))
+    users_cosine_similarity = cosine_similarity((util_matrix_sparse.T))
+
+    sim_users_df = pd.DataFrame(users_cosine_similarity,
+                           index = util_matrix_norm.columns,
+                           columns = util_matrix_norm.columns)
+
+    # sim_users = user_sim_df.sort_values(by)
 
 
     fav_user_movies = []
-    for user_id in sim_user_ids:
-        max_score = util_matrix_norm.loc[:,user_id].max()
+    for user in sim_users_df.index:
+        max_score = util_matrix_norm.loc[:,user].max()
 
-        fav_user_movies.append(util_matrix_norm[util_matrix_norm.loc[:,user_id] == max_score]).index.tolist()
+        fav_user_movies.append(util_matrix_norm[util_matrix_norm.loc[:,user] == max_score]).index.tolist()
 
     tally_favs = {movie:fav_user_movies.count(movie) for movie in fav_user_movies}
 
@@ -222,9 +253,9 @@ def collab_model(movie_list,top_n=10):
     cosine_sim = cosine_similarity(np.array(df_init_users), np.array(df_init_users))
     # cosine_sim = cosine_similarity(piv_table,piv_table)
     #Not sure what happens above. Might be that the variables are wrong.
-    idx_1 = indices[indices == movie_list[0]].index[0]              #Get indexes of the three selected movies.
-    idx_2 = indices[indices == movie_list[1]].index[0]
-    idx_3 = indices[indices == movie_list[2]].index[0]
+    idx_1 = MOVIE_INDICES[MOVIE_INDICES == movie_list[0]].index[0]              #Get indexes of the three selected movies.
+    idx_2 = MOVIE_INDICES[MOVIE_INDICES == movie_list[1]].index[0]
+    idx_3 = MOVIE_INDICES[MOVIE_INDICES == movie_list[2]].index[0]
     # Creating a Series with the similarity scores in descending order
     rank_1 = cosine_sim[idx_1] #Get the 'rank' of the movies in the cosine_similarity matrix. This is where the code fails
     rank_2 = cosine_sim[idx_2]

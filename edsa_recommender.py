@@ -24,6 +24,8 @@ The content is under the GNU icense & is free-to-use.
 # Streamlit dependencies
 import streamlit as st
 
+import traceback
+
 # Data handling dependencies
 import pandas as pd
 import numpy as np
@@ -145,7 +147,7 @@ def main():
 
         # User-based preferences
         st.write('### Enter Your Three Favorite Movies')
-        movie_1 = st.selectbox('Fisrt Option',TITLE_LIST[14930:15200])
+        movie_1 = st.selectbox('First Option',TITLE_LIST[14930:15200])
         movie_2 = st.selectbox('Second Option',TITLE_LIST[25055:25255])
         movie_3 = st.selectbox('Third Option',TITLE_LIST[21100:21200])
         fav_movies = [movie_1,movie_2,movie_3]
@@ -176,9 +178,17 @@ def main():
                     for i,j in enumerate(top_recommendations):
                         st.subheader(str(i+1)+'. '+j)
                 except Exception as ex:
-                    _exstr = 'Exception Type: {0}. \n Args: \n {1!r}'
-                    _msg = _exstr.format(type(ex).__name__,ex.args)
-                    st.error(_msg)
+                    st.error(traceback.format_exc())
+                    traceback.print_exc()
+                    # _exstr = """Exception Type: {0}. \n Args: \n {1!r} \n"""
+                #     Details':'Type of error:{} \n
+                #     :Function name:{}:\n
+                #     Line number:{}'\n,
+                # 'error_details':str(e),
+                # 'filename':__file__.__str__,""" \
+                # .format(exc_type, fname, exc_tb.tb_lineno,str(ex))
+                    # _msg = _exstr.format(type(ex).__name__,ex.args)
+                    # st.error(ex)
 
                     # st.error("Oops! Looks like this algorithm does't work.\
                     #         We'll need to fix it!")
