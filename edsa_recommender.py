@@ -7,7 +7,7 @@ For the Advanced Classification Sprint at Explore Data Science Academy.
 
 The application is intended as a text sentiment predictr fr tweet messages.
 
-Authors: Teddy Waweru, , Hunadi Mawela, Uchenna Unigwe, Stanley Agbo 
+Authors: Teddy Waweru, Ikechukwu Okernwogba, Jacqueline Wang'ombe, Titus Wanjohi
 
 Github Link: https://github.com/Jwangombe11/unsupervised-predict-streamlit-template 
 Official Presentation Link:	https://docs.google.com/presentation/d/1-AIbZcDdUDmvVoIB4WoJcIZslbbdb6S9bujMNEgpuHw/edit?usp=sharing
@@ -15,6 +15,11 @@ Official Presentation Link:	https://docs.google.com/presentation/d/1-AIbZcDdUDmv
 The content is under the GNU icense & is free-to-use.
 
 """
+
+#for debugging
+# import ptvsd
+# ptvsd.enable_attach(address=('localhost', 5678))
+# ptvsd.wait_for_attach() # Only include this line if you always wan't to attach the debugger
 
 # Streamlit dependencies
 import streamlit as st
@@ -35,6 +40,9 @@ import plotly.express as px
 import joblib,os			#Loading the model & accessing OS File System
 from PIL import Image		#Importing logo Image
 from io import BytesIO		#Buffering Images
+import asyncio
+
+
 
 
 
@@ -69,8 +77,18 @@ def main():
     # Load Datasets
     @st.experimental_singleton
     def load_datasets():
-        title_list = load_movie_titles('resources/data/movies.csv')
-        return title_list
+        global TITLE_LIST, TRAIN_DF, MOVIES_DF
+        MOVIES_DF = pd.read_feather('resources/data/movies.feather')
+        TITLE_LIST = MOVIES_DF['title'].tolist()
+        TRAIN_DF = pd.read_feather('resources/data/train.feather')
+        return TITLE_LIST,TRAIN_DF,MOVIES_DF
+
+    
+    # global TITLE_LIST, TRAIN_DF, MOVIES_DF
+    TITLE_LIST, TRAIN_DF, MOVIES_DF = load_datasets()
+
+
+
 
 
     # Load Models
@@ -90,7 +108,6 @@ def main():
         st.subheader('Developed by JitT Inc. - Team 7')
 
         col1, col2, col3 = st.columns([1,8,1])
-        # st.markdown(' - Jessica Njuguna \n - Hunadi Mawela \n - Uchenna Unigwe \n - Stanley Agbo \n - Teddy Waweru \n')
         with col1:
             pass
         with col2:
@@ -108,7 +125,6 @@ def main():
 
     def recommender_system():
 
-        title_list = load_datasets()
         # DO NOT REMOVE the 'Recommender System' option below, however,
         # you are welcome to add more options to enrich your app.
         page_options = ["Recommender System","Solution Overview"]
@@ -129,9 +145,9 @@ def main():
 
         # User-based preferences
         st.write('### Enter Your Three Favorite Movies')
-        movie_1 = st.selectbox('Fisrt Option',title_list[14930:15200])
-        movie_2 = st.selectbox('Second Option',title_list[25055:25255])
-        movie_3 = st.selectbox('Third Option',title_list[21100:21200])
+        movie_1 = st.selectbox('Fisrt Option',TITLE_LIST[14930:15200])
+        movie_2 = st.selectbox('Second Option',TITLE_LIST[25055:25255])
+        movie_3 = st.selectbox('Third Option',TITLE_LIST[21100:21200])
         fav_movies = [movie_1,movie_2,movie_3]
 
         # Perform top-10 movie recommendation generation
@@ -145,12 +161,13 @@ def main():
                     for i,j in enumerate(top_recommendations):
                         st.subheader(str(i+1)+'. '+j)
                 except:
-                    st.error("Oops! Looks like this algorithm does't work.\
+                    st.error("Oops! Looks like this algorithm doesn't work.\
                             We'll need to fix it!")
 
 
         if sys == 'Collaborative Based Filtering':
             if st.button("Recommend"):
+                breakpoint()
                 try:
                     with st.spinner('Crunching the numbers...'):
                         top_recommendations = collab_model(movie_list=fav_movies,
@@ -158,9 +175,13 @@ def main():
                     st.title("We think you'll like:")
                     for i,j in enumerate(top_recommendations):
                         st.subheader(str(i+1)+'. '+j)
-                except:
-                    st.error("Oops! Looks like this algorithm does't work.\
-                            We'll need to fix it!")
+                except Exception as ex:
+                    _exstr = 'Exception Type: {0}. \n Args: \n {1!r}'
+                    _msg = _exstr.format(type(ex).__name__,ex.args)
+                    st.error(_msg)
+
+                    # st.error("Oops! Looks like this algorithm does't work.\
+                    #         We'll need to fix it!")
 
 
     # -------------------------------------------------------------------
@@ -187,6 +208,10 @@ def main():
 	#Load function depending on radio selected above.
 	#Used to navigate through pages
     BROWSE_PAGES[page]()
+
+    load_datasets()
+
+    # asyncio.run(load_datasets())
 
 
 
