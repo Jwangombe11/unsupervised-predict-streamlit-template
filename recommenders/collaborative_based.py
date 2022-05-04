@@ -29,6 +29,7 @@
 
 # Script dependencies
 import time
+import operator
 import pandas as pd
 import numpy as np
 import pickle
@@ -200,7 +201,7 @@ def collab_model(movie_list,top_n=10):
     #------------------------ 220430
 
     #Normalize each row
-    print(f"Time:{time.asctime(time.localtime())} : Finished Init Iteration")
+    print(f"Time:{time.asctime(time.localtime())} : Creating Utility & Sparse Matrices")
 
     util_matrix_norm = util_matrix.apply(lambda x: (x - np.mean(x))/(np.max(x) - np.min(x)), axis= 1)
     util_matrix_norm.fillna(0, inplace= True)
@@ -215,19 +216,25 @@ def collab_model(movie_list,top_n=10):
                            index = util_matrix_norm.columns,
                            columns = util_matrix_norm.columns)
 
-    # sim_users = user_sim_df.sort_values(by)
+    print(f"Time:{time.asctime(time.localtime())} : Completed Creating Utility & Sparse Matrices")
 
 
-    fav_user_movies = []
+    print(f"Time:{time.asctime(time.localtime())} : Selecting Similar Users")
+
+
+    fav_sim_users_movies = []
     for user in sim_users_df.index:
         max_score = util_matrix_norm.loc[:,user].max()
 
-        fav_user_movies.append(util_matrix_norm[util_matrix_norm.loc[:,user] == max_score]).index.tolist()
+        fav_sim_users_movies.append(util_matrix_norm[util_matrix_norm.loc[:,user] == max_score].index.tolist())
 
-    tally_favs = {movie:fav_user_movies.count(movie) for movie in fav_user_movies}
+    flat_fav_sim_users_movies = [fav_movie for fav_sim_user_movies in fav_sim_users_movies for fav_movie in fav_sim_user_movies]
+
+    tally_favs = {movie:flat_fav_sim_users_movies.count(movie) for movie in set(flat_fav_sim_users_movies)}
 
     sort_favs = sorted(tally_favs.items(), key= operator.itemgetter(1), reverse= True)
-
+    
+    # End of Working Code
 
 
 
