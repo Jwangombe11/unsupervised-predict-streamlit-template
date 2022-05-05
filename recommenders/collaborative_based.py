@@ -32,6 +32,7 @@ import time
 import operator
 import pandas as pd
 import numpy as np
+import pickle
 # import pickle
 import copy
 import scipy as sp
@@ -40,29 +41,11 @@ import scipy as sp
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
 
-
-# Importing data
-# model=pickle.load(open('resources/models/220422_svd.pkl', 'rb'))
-# movies_df = pd.read_feather('resources/data/movies.feather')
-# ratings_df = pd.read_csv('resources/data/ratings.csv')
-# ratings_df.drop(['timestamp'], axis=1,inplace=True)
-print(f"Time:{time.asctime(time.localtime())} : Start loading Train DataFrames")
-# train_df = pd.read_feather('resources/data/train.feather')
-# train_df.drop(['timestamp'], axis=1,inplace=True)
-# MOVIE_INDICES = pd.Series(movies_df['title']) #MOVIE_INDICES- pandas series of the Movie titles
-
-
-print(f"Time:{time.asctime(time.localtime())} : Finish loading DataFrames")
-
-
-# reader = Reader(rating_scale=(0, 5))
-# LOAD_DF = Dataset.load_from_df(train_df,reader)
-# A_TRAIN = LOAD_DF.build_full_trainset()
-
-
-
-# We make use of an SVD model trained on a subset of the MovieLens 10k dataset.
-# model=pickle.load(open('resources/models/SVD.pkl', 'rb'))
+train_df = pd.read_csv('~/data/train.csv')
+train_df.drop(['timestamp'], axis=1,inplace=True)
+model = pickle.load(open('../../data/220422_svd.pkl', 'rb'))
+movies_df = pd.read_csv('resources/data/movies.csv')
+movies_df.dropna(inplace= True)
 
 def prediction_item(item_id, filter_train_df):
     """Map a given favourite movie to users within the
@@ -172,7 +155,7 @@ def pred_movies(movie_list_ids):
 
 # !! DO NOT CHANGE THIS FUNCTION SIGNATURE !!
 # You are, however, encouraged to change its content.  
-def collab_model(movie_list,top_n,train_df,movies_df,model):
+def collab_model(movie_list,top_n):
     """Performs Collaborative filtering based upon a list of movies supplied
        by the app user.
 
@@ -189,16 +172,11 @@ def collab_model(movie_list,top_n,train_df,movies_df,model):
         Titles of the top-n movie recommendations to the user.
 
     """
-    global TRAIN_DF, MOVIES_DF, MODEL
-    TRAIN_DF = train_df
-    MOVIES_DF = movies_df
-    MODEL= model
-
-    movie_list_ids = [MOVIES_DF.loc[MOVIES_DF['title']== movie,'movieId'].item() for movie in movie_list] 
+    movie_list_ids = [movies_df.loc[movies_df['title']== movie,'movieId'].item() for movie in movie_list] 
 
 
     #Ideal User based on Aggregate rating for the three movies selected.
-    ideal_sim_user = TRAIN_DF.loc[TRAIN_DF['movieId'].isin(movie_list_ids),:]\
+    ideal_sim_user = train_df.loc[train_df['movieId'].isin(movie_list_ids),:]\
             .groupby('userId') \
             .agg(rating_sum= ('rating', 'sum')) \
             .sort_values('rating_sum', ascending= False) \
@@ -214,7 +192,7 @@ def collab_model(movie_list,top_n,train_df,movies_df,model):
     print(f"Time:{time.asctime(time.localtime())} : Start Init Iteration")
 
 
-    df_init_users = TRAIN_DF.loc[TRAIN_DF['userId'].isin(sim_user_ids),:]
+    df_init_users = train_df.loc[train_df['userId'].isin(sim_user_ids),:]
     # for i in sim_user_ids:                                                #for each userID in movies_id,
     #     df_init_users=df_init_users.append(train_df[train_df['userId']==i]) #Append their ratings to the df_init_users DF
     util_matrix = pd.pivot_table(df_init_users, index= 'userId', columns= 'movieId', values= 'rating')
@@ -259,9 +237,9 @@ def collab_model(movie_list,top_n,train_df,movies_df,model):
     print(f"Time:{time.asctime(time.localtime())} : Developing Recommendations")
 
 
-    top_ten_recommends = [MOVIES_DF.loc[MOVIES_DF['movieId']== tallied_movie[0],'title'].item() \
+    top_ten_recommends = [movies_df.loc[movies_df['movieId']== tallied_movie[0],'title'].item() \
                      for tallied_movie in sort_favs[:11] \
-                        if MOVIES_DF.loc[MOVIES_DF['movieId']== tallied_movie[0],'title'].item() not in movie_list]
+                        if movies_df.loc[movies_df['movieId']== tallied_movie[0],'title'].item() not in movie_list]
 
     print(f"Time:{time.asctime(time.localtime())} : Completed developing Recommendations")
         
@@ -269,46 +247,3 @@ def collab_model(movie_list,top_n,train_df,movies_df,model):
     # End of Working Code
 
     return top_ten_recommends
-    #Get the Cosine Similarity Matrix
-
-
-
-
-
-
-    #------------------------------
-
-
-
-
-
-
-
-
-
-
-    # # Getting the cosine similarity matrix
-    # cosine_sim = cosine_similarity(np.array(df_init_users), np.array(df_init_users))
-    # # cosine_sim = cosine_similarity(piv_table,piv_table)
-    # #Not sure what happens above. Might be that the variables are wrong.
-    # idx_1 = MOVIE_INDICES[MOVIE_INDICES == movie_list[0]].index[0]              #Get indexes of the three selected movies.
-    # idx_2 = MOVIE_INDICES[MOVIE_INDICES == movie_list[1]].index[0]
-    # idx_3 = MOVIE_INDICES[MOVIE_INDICES == movie_list[2]].index[0]
-    # # Creating a Series with the similarity scores in descending order
-    # rank_1 = cosine_sim[idx_1] #Get the 'rank' of the movies in the cosine_similarity matrix. This is where the code fails
-    # rank_2 = cosine_sim[idx_2]
-    # rank_3 = cosine_sim[idx_3]
-    # # Calculating the scores
-    # score_series_1 = pd.Series(rank_1).sort_values(ascending = False)
-    # score_series_2 = pd.Series(rank_2).sort_values(ascending = False)
-    # score_series_3 = pd.Series(rank_3).sort_values(ascending = False)
-    #  # Appending the names of movies
-    # listings = score_series_1.append(score_series_1).append(score_series_3).sort_values(ascending = False)
-    # recommended_movies = []
-    # # Choose top 50
-    # top_50_indexes = list(listings.iloc[1:50].index)
-    # # Removing chosen movies
-    # top_indexes = np.setdiff1d(top_50_indexes,[idx_1,idx_2,idx_3])
-    # for i in top_indexes[:top_n]:
-    #     recommended_movies.append(list(movies_df['title'])[i])
-    # return recommended_movies

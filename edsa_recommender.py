@@ -47,9 +47,6 @@ from PIL import Image		#Importing logo Image
 MOVIES_DF = pd.read_csv('resources/data/movies.csv')
 MOVIES_DF.dropna(inplace= True)
 TITLE_LIST = MOVIES_DF['title'].tolist()
-TRAIN_DF = pd.read_csv('~/data/train.csv')
-TRAIN_DF.drop(['timestamp'], axis=1,inplace=True)
-SVD_MODEL = pickle.load(open('../data/220422_svd.pkl', 'rb'))
 
 
 #-------------------------------------------------------------------
@@ -64,7 +61,7 @@ clip_art = Image.open('resources/imgs/EDSA_logo.png')
 def main():
     page_options = ["Recommender System","Project Overview","Solution Overview"]
     page_selection = st.sidebar.selectbox("Choose Option", page_options)
-    
+
     if page_selection == "Recommender System":
 
         # DO NOT REMOVE the 'Recommender System' option below, however,
@@ -97,9 +94,8 @@ def main():
                 try:
                     with st.spinner('Crunching the numbers...'):
                         top_recommendations = content_model(movie_list=fav_movies,
-                                                            top_n=10,
-                                                            train_df= TRAIN_DF,
-                                                            movies_df= MOVIES_DF)
+                                                            top_n=10
+                                                            )
                     st.title("We think you'll like:")
                     for i,j in enumerate(top_recommendations):
                         st.subheader(str(i+1)+'. '+j)
@@ -113,10 +109,7 @@ def main():
                 try:
                     with st.spinner('Crunching the numbers...'):
                         top_recommendations = collab_model(movie_list=fav_movies,
-                                                        top_n=10,
-                                                        train_df= TRAIN_DF,
-                                                        movies_df= MOVIES_DF,
-                                                        model= SVD_MODEL)
+                                                        top_n=10)
                     st.title("We think you'll like:")
                     for i,j in enumerate(top_recommendations):
                         st.subheader(str(i+1)+'. '+j)
