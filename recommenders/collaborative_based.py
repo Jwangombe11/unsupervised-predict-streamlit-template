@@ -28,25 +28,16 @@
 """
 
 # Script dependencies
-import time
 import operator
 import pandas as pd
 import numpy as np
 import pickle
-import dask.dataframe as dd
-import copy
 import scipy as sp
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
 
-train_df = dd.read_csv('~/data/train.csv', 
-                    usecols=['userId', 'movieId', 'rating'],
-                    dtype={'userId': np.uint32, 'movieId': np.uint32, 'rating': np.float16}
-                   )
-
-train_df = train_df.compute()
-# train_df = pd.read_csv('~/data/train.csv')
-# train_df.drop(['timestamp'], axis=1,inplace=True)
+train_df = pd.read_csv('~/data/train.csv')
+train_df.drop(['timestamp'], axis=1,inplace=True)
 model = pickle.load(open('resources/models/220422_svd.pkl', 'rb'))
 movies_df = pd.read_csv('resources/data/movies.csv')
 movies_df.dropna(inplace= True)
