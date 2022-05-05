@@ -80,11 +80,12 @@ def main():
     # global TITLE_LIST, TRAIN_DF, MOVIES_DF
     TITLE_LIST, TRAIN_DF, MOVIES_DF,SVD_MODEL = load_datasets()
 
-    def recommender_system():
+    page_options = ["Recommender System","Project Overview","Solution Overview"]
+    page_selection = st.sidebar.selectbox("Choose Option", page_options)
+    if page_selection == "Recommender System":
 
         # DO NOT REMOVE the 'Recommender System' option below, however,
         # you are welcome to add more options to enrich your app.
-        page_options = ["Recommender System","Solution Overview"]
 
         # -------------------------------------------------------------------
         # ----------- !! THIS CODE MUST NOT BE ALTERED !! -------------------
@@ -140,7 +141,7 @@ def main():
                     st.error(traceback.format_exc())
                     traceback.print_exc()
 
-    def project_overview():
+    if page_selection == "Project Overview":
         st.title('Movie Recommendation System')
         st.markdown('---')
         st.subheader('Developed by JitT Inc. - Team 7')
@@ -161,7 +162,7 @@ def main():
         st.markdown('---')
 
     # -------------------------------------------------------------------
-    def solution_overview():
+    if page_selection == "Solution Overview":
         # ------------- SAFE FOR ALTERING/EXTENSION -------------------
         # if page_selection == "Solution Overview":
             st.title("Solution Overview")
@@ -171,19 +172,19 @@ def main():
     # or to provide your business pitch.
 
     #Dict of available pages to browse on the application
-    BROWSE_PAGES = {
-        'Recommender System': recommender_system,
-        'Project Overview': project_overview,
-        'Solution Overview': solution_overview
-    }
+    # BROWSE_PAGES = {
+    #     'Recommender System': recommender_system,
+    #     'Project Overview': project_overview,
+    #     'Solution Overview': solution_overview
+    # }
 
-	#Page Navigation Title & Radio BUttons
-    st.sidebar.title('Navigation')
-    page = st.sidebar.radio('Go to:', list(BROWSE_PAGES.keys()))
+	# #Page Navigation Title & Radio BUttons
+    # st.sidebar.title('Navigation')
+    # page = st.sidebar.radio('Go to:', list(BROWSE_PAGES.keys()))
 
-	#Load function depending on radio selected above.
-	#Used to navigate through pages
-    BROWSE_PAGES[page]()
+	# #Load function depending on radio selected above.
+	# #Used to navigate through pages
+    # BROWSE_PAGES[page]()
 
 if __name__ == '__main__':
     main()
