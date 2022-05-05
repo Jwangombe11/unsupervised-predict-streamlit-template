@@ -25,6 +25,8 @@ The content is under the GNU icense & is free-to-use.
 import streamlit as st
 
 import traceback
+import pickle
+import time
 
 # Data handling dependencies
 import pandas as pd
@@ -36,13 +38,12 @@ from recommenders.collaborative_based import collab_model
 from recommenders.content_based import content_model
 
 #Plotting of Graphs
-import plotly.express as px
+#import plotly.express as px
 
 # Streamlit dependencies
 import joblib,os			#Loading the model & accessing OS File System
 from PIL import Image		#Importing logo Image
 from io import BytesIO		#Buffering Images
-import asyncio
 
 
 
@@ -80,14 +81,26 @@ def main():
     @st.experimental_singleton
     def load_datasets():
         global TITLE_LIST, TRAIN_DF, MOVIES_DF
+
+        print(f"Time:{time.asctime(time.localtime())} : Start loading DataFrames")
         MOVIES_DF = pd.read_feather('resources/data/movies.feather')
+        MOVIES_DF.dropna(inplace= True)
         TITLE_LIST = MOVIES_DF['title'].tolist()
         TRAIN_DF = pd.read_feather('resources/data/train.feather')
-        return TITLE_LIST,TRAIN_DF,MOVIES_DF
+        TRAIN_DF.drop(['timestamp'], axis=1,inplace=True)
+
+        print(f"Time:{time.asctime(time.localtime())} : Start loading Model")
+        SVD_MODEL = pickle.load(open('resources/models/220422_svd.pkl', 'rb'))
+
+        print(f"Time:{time.asctime(time.localtime())} : Completed Loading Static Files")
+
+
+        return TITLE_LIST,TRAIN_DF,MOVIES_DF,SVD_MODEL
 
     
     # global TITLE_LIST, TRAIN_DF, MOVIES_DF
-    TITLE_LIST, TRAIN_DF, MOVIES_DF = load_datasets()
+    TITLE_LIST, TRAIN_DF, MOVIES_DF,SVD_MODEL = load_datasets()
+    print('test')
 
 
 
@@ -124,7 +137,6 @@ def main():
         st.markdown('## Introduction')
         st.markdown('---')
 
-
     def recommender_system():
 
         # DO NOT REMOVE the 'Recommender System' option below, however,
@@ -158,7 +170,9 @@ def main():
                 try:
                     with st.spinner('Crunching the numbers...'):
                         top_recommendations = content_model(movie_list=fav_movies,
-                                                            top_n=10)
+                                                            top_n=10,
+                                                            train_df= TRAIN_DF,
+                                                            movies_df= MOVIES_DF)
                     st.title("We think you'll like:")
                     for i,j in enumerate(top_recommendations):
                         st.subheader(str(i+1)+'. '+j)
@@ -169,11 +183,13 @@ def main():
 
         if sys == 'Collaborative Based Filtering':
             if st.button("Recommend"):
-                breakpoint()
                 try:
                     with st.spinner('Crunching the numbers...'):
                         top_recommendations = collab_model(movie_list=fav_movies,
-                                                        top_n=10)
+                                                        top_n=10,
+                                                        train_df= TRAIN_DF,
+                                                        movies_df= MOVIES_DF,
+                                                        model= SVD_MODEL)
                     st.title("We think you'll like:")
                     for i,j in enumerate(top_recommendations):
                         st.subheader(str(i+1)+'. '+j)
