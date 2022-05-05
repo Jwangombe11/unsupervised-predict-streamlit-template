@@ -40,6 +40,7 @@ from surprise import Reader, Dataset
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
 
+
 # Importing data
 print(f"Time:{time.asctime(time.localtime())} : Start loading Model")
 model=pickle.load(open('resources/models/220422_svd.pkl', 'rb'))
@@ -106,7 +107,7 @@ def prediction_item(item_id, filter_train_df):
     #     predictions.append(model.predict(iid=item_id,uid=ui, verbose = False))
     return movie_pred_df
 
-def pred_movies(movie_list):
+def pred_movies(movie_list_ids):
     """Maps the given favourite movies selected within the app to corresponding
     users within the MovieLens dataset.
 
@@ -126,13 +127,17 @@ def pred_movies(movie_list):
 
     # For each movie selected by a user of the app,
     # predict a corresponding user within the dataset with the highest rating
-    filter_train_df = train_df.loc[(train_df['movieId'] == movies_df.loc[movies_df['title'] == movie_list[0],'movieId'].values[0]) \
-                                 & (train_df['rating'] > 3) | \
-                                    (train_df['movieId'] == movies_df.loc[movies_df['title'] == movie_list[1],'movieId'].values[0]) \
-                                        & (train_df['rating'] > 3) | \
-                                        (train_df['movieId'] == movies_df.loc[movies_df['title'] == movie_list[2],'movieId'].values[0]) \
-                                            & (train_df['rating'] > 3)
-                                        ,:]
+    # movie_list_ids = [movies_df.loc[movies_df['title']== movie,'movieId'].item() for movie in movie_list] 
+    filter_train_df = train_df.loc[(train_df['movieId'].isin(movie_list_ids)) \
+                                 & (train_df['rating'] > 3) ,:]
+
+    #Aggregate dataset for the three movies selected.
+    ideal_sim_user = train_df.loc[train_df['movieId'].isin(movie_list_ids),:]\
+            .groupby('userId') \
+            .agg(rating_sum= ('rating', 'sum')) \
+            .sort_values('rating_sum', ascending= False) \
+            .iloc[0].name
+    
 
     #If too few users are available with the above specification
     #ie. the movies are not rated highly
@@ -141,7 +146,7 @@ def pred_movies(movie_list):
 
     id_store_df = pd.DataFrame()
 
-    for i in movie_list:
+    for i in movie_list_ids:
         print(f"Time:{time.asctime(time.localtime())} : Start Predictions for {i}")
 
         #Filter Train_df based on the ratings. ie. only consider users
@@ -154,12 +159,15 @@ def pred_movies(movie_list):
         # predictions = prediction_item(item_id = i)
         prediction_df.sort_values('prediction', ascending= False, inplace= True)
         # predictions.sort(key=lambda x: x.est, reverse=True)
+
+        prediction_df.reset_index(drop= True, inplace= True)
+
         print(f"Time:{time.asctime(time.localtime())} : Complete Predictions for {i}")
 
         # Take the top 10 user id's from each movie with highest rankings
         # for pred in predictions[:10]:
         #     id_store.append(pred.uid)
-        id_store_df = id_store_df.append(prediction_df.loc[:10,:])
+        id_store_df = id_store_df.append(prediction_df.loc[:30,:])
         # id_store_df = prediction_df.loc[:10,:]
     # Return a list of user id's
     return id_store_df
@@ -183,9 +191,21 @@ def collab_model(movie_list,top_n=10):
         Titles of the top-n movie recommendations to the user.
 
     """
+    movie_list_ids = [movies_df.loc[movies_df['title']== movie,'movieId'].item() for movie in movie_list] 
+
+
+    #Ideal User based on Aggregate rating for the three movies selected.
+    ideal_sim_user = train_df.loc[train_df['movieId'].isin(movie_list_ids),:]\
+            .groupby('userId') \
+            .agg(rating_sum= ('rating', 'sum')) \
+            .sort_values('rating_sum', ascending= False) \
+            .iloc[0].name
 
     # MOVIE_INDICES = pd.Series(movies_df['title']) #MOVIE_INDICES- pandas series of the Movie titles
-    sim_user_ids = set(pred_movies(movie_list)['userId'])     #sim_user_ids- holds a list of userIDs who rated the selected movies highly
+    sim_user_ids = pred_movies(movie_list_ids)['userId'].tolist()   #sim_user_ids- holds a list of userIDs who rated the selected movies highly
+
+    if ideal_sim_user not in sim_user_ids:
+        sim_user_ids.append(ideal_sim_user)
     # df_init_users = ratings_df[ratings_df['userId']==sim_user_ids[0]]      #initializes the df_init_users DF
     df_init_users = pd.DataFrame()      #initializes the df_init_users DF
     print(f"Time:{time.asctime(time.localtime())} : Start Init Iteration")
@@ -221,9 +241,8 @@ def collab_model(movie_list,top_n=10):
 
     print(f"Time:{time.asctime(time.localtime())} : Selecting Similar Users")
 
-
     fav_sim_users_movies = []
-    for user in sim_users_df.index:
+    for user in sim_users_df.sort_values(by= ideal_sim_user, ascending= False).index:
         max_score = util_matrix_norm.loc[:,user].max()
 
         fav_sim_users_movies.append(util_matrix_norm[util_matrix_norm.loc[:,user] == max_score].index.tolist())
@@ -233,10 +252,19 @@ def collab_model(movie_list,top_n=10):
     tally_favs = {movie:flat_fav_sim_users_movies.count(movie) for movie in set(flat_fav_sim_users_movies)}
 
     sort_favs = sorted(tally_favs.items(), key= operator.itemgetter(1), reverse= True)
-    
+
+    print(f"Time:{time.asctime(time.localtime())} : Developing Recommendations")
+
+
+    top_recommends = [movies_df.loc[movies_df['movieId']== tallied_movie[0],'title'].item() \
+                     for tallied_movie in sort_favs \
+                        if movies_df.loc[movies_df['movieId']== tallied_movie[0],'title'].item() not in movie_list]
+
+        
+
     # End of Working Code
 
-
+    return top_recommends[:10]
 
     #Get the Cosine Similarity Matrix
 
@@ -256,28 +284,28 @@ def collab_model(movie_list,top_n=10):
 
 
 
-    # Getting the cosine similarity matrix
-    cosine_sim = cosine_similarity(np.array(df_init_users), np.array(df_init_users))
-    # cosine_sim = cosine_similarity(piv_table,piv_table)
-    #Not sure what happens above. Might be that the variables are wrong.
-    idx_1 = MOVIE_INDICES[MOVIE_INDICES == movie_list[0]].index[0]              #Get indexes of the three selected movies.
-    idx_2 = MOVIE_INDICES[MOVIE_INDICES == movie_list[1]].index[0]
-    idx_3 = MOVIE_INDICES[MOVIE_INDICES == movie_list[2]].index[0]
-    # Creating a Series with the similarity scores in descending order
-    rank_1 = cosine_sim[idx_1] #Get the 'rank' of the movies in the cosine_similarity matrix. This is where the code fails
-    rank_2 = cosine_sim[idx_2]
-    rank_3 = cosine_sim[idx_3]
-    # Calculating the scores
-    score_series_1 = pd.Series(rank_1).sort_values(ascending = False)
-    score_series_2 = pd.Series(rank_2).sort_values(ascending = False)
-    score_series_3 = pd.Series(rank_3).sort_values(ascending = False)
-     # Appending the names of movies
-    listings = score_series_1.append(score_series_1).append(score_series_3).sort_values(ascending = False)
-    recommended_movies = []
-    # Choose top 50
-    top_50_indexes = list(listings.iloc[1:50].index)
-    # Removing chosen movies
-    top_indexes = np.setdiff1d(top_50_indexes,[idx_1,idx_2,idx_3])
-    for i in top_indexes[:top_n]:
-        recommended_movies.append(list(movies_df['title'])[i])
-    return recommended_movies
+    # # Getting the cosine similarity matrix
+    # cosine_sim = cosine_similarity(np.array(df_init_users), np.array(df_init_users))
+    # # cosine_sim = cosine_similarity(piv_table,piv_table)
+    # #Not sure what happens above. Might be that the variables are wrong.
+    # idx_1 = MOVIE_INDICES[MOVIE_INDICES == movie_list[0]].index[0]              #Get indexes of the three selected movies.
+    # idx_2 = MOVIE_INDICES[MOVIE_INDICES == movie_list[1]].index[0]
+    # idx_3 = MOVIE_INDICES[MOVIE_INDICES == movie_list[2]].index[0]
+    # # Creating a Series with the similarity scores in descending order
+    # rank_1 = cosine_sim[idx_1] #Get the 'rank' of the movies in the cosine_similarity matrix. This is where the code fails
+    # rank_2 = cosine_sim[idx_2]
+    # rank_3 = cosine_sim[idx_3]
+    # # Calculating the scores
+    # score_series_1 = pd.Series(rank_1).sort_values(ascending = False)
+    # score_series_2 = pd.Series(rank_2).sort_values(ascending = False)
+    # score_series_3 = pd.Series(rank_3).sort_values(ascending = False)
+    #  # Appending the names of movies
+    # listings = score_series_1.append(score_series_1).append(score_series_3).sort_values(ascending = False)
+    # recommended_movies = []
+    # # Choose top 50
+    # top_50_indexes = list(listings.iloc[1:50].index)
+    # # Removing chosen movies
+    # top_indexes = np.setdiff1d(top_50_indexes,[idx_1,idx_2,idx_3])
+    # for i in top_indexes[:top_n]:
+    #     recommended_movies.append(list(movies_df['title'])[i])
+    # return recommended_movies
