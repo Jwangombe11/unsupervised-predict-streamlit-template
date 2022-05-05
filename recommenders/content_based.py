@@ -28,16 +28,14 @@
 """
 
 # Script dependencies
-import os
-import time
 import pandas as pd
 import numpy as np
+from scipy.sparse import load_npz
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.feature_extraction.text import CountVectorizer
 
 # Importing data
-
-# movies = pd.read_csv('resources/data/movies.csv', sep = ',')
+movies = pd.read_csv('../resources/data/movies.csv')
+movies_vec = load_npz('../resources/data/movies_vec.npz')
 # ratings = pd.read_csv('resources/data/ratings.csv')
 # movies.dropna(inplace=True)
 
@@ -63,7 +61,7 @@ def data_preprocessing(subset_size):
 
 # !! DO NOT CHANGE THIS FUNCTION SIGNATURE !!
 # You are, however, encouraged to change its content.  
-def content_model(movie_list,top_n,train_df,movies_df):
+def content_model(movie_list,top_n=10):
     """Performs Content filtering based upon a list of movies supplied
        by the app user.
 
@@ -79,36 +77,40 @@ def content_model(movie_list,top_n,train_df,movies_df):
     list (str)
         Titles of the top-n movie recommendations to the user.
 
-    """
-    # Initializing the empty list of recommended movies
+    """# Initializing the empty list of recommended movies
     recommended_movies = []
-    data = data_preprocessing(27000)
-    # Instantiating and generating the count matrix
-    count_vec = CountVectorizer()
-    count_matrix = count_vec.fit_transform(data['keyWords'])
-    indices = pd.Series(data['title'])
-    cosine_sim = cosine_similarity(count_matrix, count_matrix)
-    # Getting the index of the movie that matches the title
-    idx_1 = indices[indices == movie_list[0]].index[0]
-    idx_2 = indices[indices == movie_list[1]].index[0]
-    idx_3 = indices[indices == movie_list[2]].index[0]
-    # Creating a Series with the similarity scores in descending order
-    rank_1 = cosine_sim[idx_1]
-    rank_2 = cosine_sim[idx_2]
-    rank_3 = cosine_sim[idx_3]
-    # Calculating the scores
-    score_series_1 = pd.Series(rank_1).sort_values(ascending = False)
-    score_series_2 = pd.Series(rank_2).sort_values(ascending = False)
-    score_series_3 = pd.Series(rank_3).sort_values(ascending = False)
-    # Getting the indexes of the 10 most similar movies
-    listings = score_series_1.append(score_series_1).append(score_series_3).sort_values(ascending = False)
+    indices = pd.Series(movies['title'])
+    
+    index = []
 
-    # Store movie names
-    recommended_movies = []
-    # Appending the names of movies
-    top_50_indexes = list(listings.iloc[1:50].index)
-    # Removing chosen movies
-    top_indexes = np.setdiff1d(top_50_indexes,[idx_1,idx_2,idx_3])
-    for i in top_indexes[:top_n]:
-        recommended_movies.append(list(movies['title'])[i])
+    for movie in movie_list:
+        index.append(indices[indices == movie].index[0])
+        
+    # create a user profile using the average of the movie features
+    profile = movies_vec[index[0]]
+
+    for i in range(len(index)):
+        if i == 0:
+            continue
+        profile = profile + movies_vec[index[i]]
+
+    profile = profile/len(index)
+    
+    # get an array of similarities
+    similarity = cosine_similarity(movies_vec, profile).reshape(1,-1)[0]
+    # convert to a pandas series and sort the resulting series in descending order
+    profile_similarity = pd.Series(similarity, index=movies.title, name='name')
+    profile_similarity = profile_similarity.sort_values(ascending=False)
+    # remove the movies selected by the user from the top matches
+    forbidden = set(movie_list)
+    similar_movies = profile_similarity.index.to_numpy()
+    count = 0
+    for i in range(200):
+        if similar_movies[i] in forbidden:
+            continue
+        recommended_movies.append(similar_movies[i])
+        count = count + 1
+
+        if count == top_n:
+            break
     return recommended_movies
