@@ -41,13 +41,7 @@ from recommenders.content_based import content_model
 #import plotly.express as px
 
 # Streamlit dependencies
-import joblib,os			#Loading the model & accessing OS File System
 from PIL import Image		#Importing logo Image
-from io import BytesIO		#Buffering Images
-
-
-
-
 
 #-------------------------------------------------------------------
 #START
@@ -57,26 +51,8 @@ from io import BytesIO		#Buffering Images
 # Load Website's photo clip art
 clip_art = Image.open('resources/imgs/EDSA_logo.png') 
 
-#Set the Pages Initial Configuration Settings
-# st.set_page_config(page_title= 'JitT Inc.: Movie Recommendation System',
-# 					page_icon= clip_art,
-# 					layout="wide",
-# 					menu_items = {
-# 							'Report a Bug': 'https://www.google.com'
-# 					})
-
-
-
-
-
-
-
-
 # App declaration
 def main():
-
-
-
     # Load Datasets
     @st.experimental_singleton
     def load_datasets():
@@ -93,7 +69,7 @@ def main():
 
         # print(f"Time:{time.asctime(time.localtime())} : Start loading Model")
         # SVD_MODEL = pickle.load(open('resources/models/220422_svd.pkl', 'rb'))
-        SVD_MODEL = pickle.load(open('~/data/models/220422_svd.pkl', 'rb'))
+        SVD_MODEL = pickle.load(open('../data/220422_svd.pkl', 'rb'))
 
         # print(f"Time:{time.asctime(time.localtime())} : Completed Loading Static Files")
 
@@ -103,22 +79,6 @@ def main():
     
     # global TITLE_LIST, TRAIN_DF, MOVIES_DF
     TITLE_LIST, TRAIN_DF, MOVIES_DF,SVD_MODEL = load_datasets()
-    # print('test')
-
-
-
-
-
-    # Load Models
-    @st.experimental_singleton
-    def load_models():
-        pass
-
-    # Read Markdown files
-    def load_markdown(file):
-        return Path(file).read_text()
-
-
 
     def project_overview():
         st.title('Movie Recommendation System')
@@ -225,8 +185,8 @@ def main():
 
     #Dict of available pages to browse on the application
     BROWSE_PAGES = {
-        'Project Overview': project_overview,
         'Recommender System': recommender_system,
+        'Project Overview': project_overview,
         'Solution Overview': solution_overview
     }
 
@@ -237,16 +197,6 @@ def main():
 	#Load function depending on radio selected above.
 	#Used to navigate through pages
     BROWSE_PAGES[page]()
-
-    load_datasets()
-
-    # asyncio.run(load_datasets())
-
-
-
-
-
-
 
 if __name__ == '__main__':
     main()
