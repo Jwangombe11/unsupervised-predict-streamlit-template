@@ -33,17 +33,14 @@ import operator
 import pandas as pd
 import numpy as np
 import pickle
-# import pickle
 import copy
 import scipy as sp
-# from surprise import Reader, Dataset
-# from surprise import SVD, NormalPredictor, BaselineOnly, KNNBasic, NMF
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
 
 train_df = pd.read_csv('~/data/train.csv')
 train_df.drop(['timestamp'], axis=1,inplace=True)
-model = pickle.load(open('../../data/220422_svd.pkl', 'rb'))
+model = pickle.load(open('resources/models/220422_svd.pkl', 'rb'))
 movies_df = pd.read_csv('resources/data/movies.csv')
 movies_df.dropna(inplace= True)
 
@@ -81,7 +78,7 @@ def prediction_item(item_id, filter_train_df):
     # user_ids = set(np.tolist(train_df['userId']))
     try:
         # predictions = model.predict(uid=set(np.tolist(train_df['userId'])), iid=np.full((item_id)), verbose= False)
-        movie_pred_df['prediction'] = movie_pred_df.apply(lambda x : MODEL.predict(uid = x['userId'], iid= item_id)[3], axis=1)
+        movie_pred_df['prediction'] = movie_pred_df.apply(lambda x : model.predict(uid = x['userId'], iid= item_id)[3], axis=1)
     except Exception as e:
         print(e)
     # for ui in A_TRAIN.all_users():
@@ -109,11 +106,11 @@ def pred_movies(movie_list_ids):
     # For each movie selected by a user of the app,
     # predict a corresponding user within the dataset with the highest rating
     # movie_list_ids = [movies_df.loc[movies_df['title']== movie,'movieId'].item() for movie in movie_list] 
-    filter_train_df = TRAIN_DF.loc[(TRAIN_DF['movieId'].isin(movie_list_ids)) \
-                                 & (TRAIN_DF['rating'] > 3) ,:]
+    filter_train_df = train_df.loc[(train_df['movieId'].isin(movie_list_ids)) \
+                                 & (train_df['rating'] > 3) ,:]
 
     #Aggregate dataset for the three movies selected.
-    ideal_sim_user = TRAIN_DF.loc[TRAIN_DF['movieId'].isin(movie_list_ids),:]\
+    ideal_sim_user = train_df.loc[train_df['movieId'].isin(movie_list_ids),:]\
             .groupby('userId') \
             .agg(rating_sum= ('rating', 'sum')) \
             .sort_values('rating_sum', ascending= False) \
@@ -123,7 +120,7 @@ def pred_movies(movie_list_ids):
     #If too few users are available with the above specification
     #ie. the movies are not rated highly
     if filter_train_df.shape[0] < 3000:
-        filter_train_df = TRAIN_DF.sample(n= 3500)
+        filter_train_df = train_df.sample(n= 3500)
 
     id_store_df = pd.DataFrame()
 
