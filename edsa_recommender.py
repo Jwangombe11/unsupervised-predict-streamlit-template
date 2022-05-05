@@ -33,7 +33,7 @@ import pandas as pd
 import numpy as np
 
 # Custom Libraries
-from utils.data_loader import load_movie_titles
+# from utils.data_loader import load_movie_titles
 from recommenders.collaborative_based import collab_model
 from recommenders.content_based import content_model
 
@@ -58,12 +58,12 @@ from io import BytesIO		#Buffering Images
 clip_art = Image.open('resources/imgs/EDSA_logo.png') 
 
 #Set the Pages Initial Configuration Settings
-st.set_page_config(page_title= 'JitT Inc.: Movie Recommendation System',
-					page_icon= clip_art,
-					layout="wide",
-					menu_items = {
-							'Report a Bug': 'https://www.google.com'
-					})
+# st.set_page_config(page_title= 'JitT Inc.: Movie Recommendation System',
+# 					page_icon= clip_art,
+# 					layout="wide",
+# 					menu_items = {
+# 							'Report a Bug': 'https://www.google.com'
+# 					})
 
 
 
