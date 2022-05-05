@@ -88,7 +88,7 @@ def main():
         MOVIES_DF.dropna(inplace= True)
         TITLE_LIST = MOVIES_DF['title'].tolist()
         # TRAIN_DF = pd.read_feather('resources/data/train.feather')
-        TRAIN_DF = pd.read_csv('resources/data/train.csv')
+        TRAIN_DF = pd.read_csv('/data/train.csv')
         TRAIN_DF.drop(['timestamp'], axis=1,inplace=True)
 
         # print(f"Time:{time.asctime(time.localtime())} : Start loading Model")
