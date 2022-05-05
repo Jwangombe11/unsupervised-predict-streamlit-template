@@ -80,26 +80,6 @@ def main():
     # global TITLE_LIST, TRAIN_DF, MOVIES_DF
     TITLE_LIST, TRAIN_DF, MOVIES_DF,SVD_MODEL = load_datasets()
 
-    def project_overview():
-        st.title('Movie Recommendation System')
-        st.markdown('---')
-        st.subheader('Developed by JitT Inc. - Team 7')
-
-        col1, col2, col3 = st.columns([1,8,1])
-        with col1:
-            pass
-        with col2:
-            # st.markdown('---')
-            st.markdown('### Development Team')
-            team_members = Image.open('resources/imgs/landing_page_sample.png')
-            st.image(team_members)
-
-        with col3:
-            pass
-			
-        st.markdown('## Introduction')
-        st.markdown('---')
-
     def recommender_system():
 
         # DO NOT REMOVE the 'Recommender System' option below, however,
@@ -159,19 +139,26 @@ def main():
                 except Exception as ex:
                     st.error(traceback.format_exc())
                     traceback.print_exc()
-                    # _exstr = """Exception Type: {0}. \n Args: \n {1!r} \n"""
-                #     Details':'Type of error:{} \n
-                #     :Function name:{}:\n
-                #     Line number:{}'\n,
-                # 'error_details':str(e),
-                # 'filename':__file__.__str__,""" \
-                # .format(exc_type, fname, exc_tb.tb_lineno,str(ex))
-                    # _msg = _exstr.format(type(ex).__name__,ex.args)
-                    # st.error(ex)
 
-                    # st.error("Oops! Looks like this algorithm does't work.\
-                    #         We'll need to fix it!")
+    def project_overview():
+        st.title('Movie Recommendation System')
+        st.markdown('---')
+        st.subheader('Developed by JitT Inc. - Team 7')
 
+        col1, col2, col3 = st.columns([1,8,1])
+        with col1:
+            pass
+        with col2:
+            # st.markdown('---')
+            st.markdown('### Development Team')
+            team_members = Image.open('resources/imgs/landing_page_sample.png')
+            st.image(team_members)
+
+        with col3:
+            pass
+			
+        st.markdown('## Introduction')
+        st.markdown('---')
 
     # -------------------------------------------------------------------
     def solution_overview():
