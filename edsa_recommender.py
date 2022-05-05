@@ -83,14 +83,17 @@ def main():
         global TITLE_LIST, TRAIN_DF, MOVIES_DF
 
         print(f"Time:{time.asctime(time.localtime())} : Start loading DataFrames")
-        MOVIES_DF = pd.read_feather('resources/data/movies.feather')
+        # MOVIES_DF = pd.read_feather('resources/data/movies.feather')
+        MOVIES_DF = pd.read_csv('movies.csv')
         MOVIES_DF.dropna(inplace= True)
         TITLE_LIST = MOVIES_DF['title'].tolist()
-        TRAIN_DF = pd.read_feather('resources/data/train.feather')
+        # TRAIN_DF = pd.read_feather('resources/data/train.feather')
+        TRAIN_DF = pd.read_csv('train.csv')
         TRAIN_DF.drop(['timestamp'], axis=1,inplace=True)
 
         print(f"Time:{time.asctime(time.localtime())} : Start loading Model")
-        SVD_MODEL = pickle.load(open('resources/models/220422_svd.pkl', 'rb'))
+        # SVD_MODEL = pickle.load(open('resources/models/220422_svd.pkl', 'rb'))
+        SVD_MODEL = pickle.load(open('models/220422_svd.pkl', 'rb'))
 
         print(f"Time:{time.asctime(time.localtime())} : Completed Loading Static Files")
 

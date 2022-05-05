@@ -141,6 +141,7 @@ cython_debug/
 resources/data/**
 resources/models/**
 resources/Meeting Minutes/*.docx
+recommenders/data/**
 
 #VS Code files & folder
 .vscode
