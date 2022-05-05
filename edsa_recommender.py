@@ -88,14 +88,14 @@ def main():
         MOVIES_DF.dropna(inplace= True)
         TITLE_LIST = MOVIES_DF['title'].tolist()
         # TRAIN_DF = pd.read_feather('resources/data/train.feather')
-        TRAIN_DF = pd.read_csv('/data/train.csv')
+        TRAIN_DF = pd.read_csv('~/data/train.csv')
         TRAIN_DF.drop(['timestamp'], axis=1,inplace=True)
 
         # print(f"Time:{time.asctime(time.localtime())} : Start loading Model")
         # SVD_MODEL = pickle.load(open('resources/models/220422_svd.pkl', 'rb'))
-        SVD_MODEL = pickle.load(open('/data/models/220422_svd.pkl', 'rb'))
+        SVD_MODEL = pickle.load(open('~/data/models/220422_svd.pkl', 'rb'))
 
-        print(f"Time:{time.asctime(time.localtime())} : Completed Loading Static Files")
+        # print(f"Time:{time.asctime(time.localtime())} : Completed Loading Static Files")
 
 
         return TITLE_LIST,TRAIN_DF,MOVIES_DF,SVD_MODEL
