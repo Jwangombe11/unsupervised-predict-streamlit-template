@@ -59,14 +59,6 @@ def prediction_item(item_id, filter_train_df):
         User IDs of users with similar high ratings for the given movie.
 
     """
-    # Data preprosessing
-    # print(f"Time:{time.asctime(time.localtime())} : Start Surprise Reading Data")
-
-    # reader = Reader(rating_scale=(0, 5))
-    # load_df = Dataset.load_from_df(train_df,reader)
-    # a_train = load_df.build_full_trainset()
-
-    print(f"Time:{time.asctime(time.localtime())} : Start Predictions")
 
     movie_pred_df = pd.DataFrame(
     {
@@ -74,15 +66,10 @@ def prediction_item(item_id, filter_train_df):
     }
     )
 
-
-    # user_ids = set(np.tolist(train_df['userId']))
     try:
-        # predictions = model.predict(uid=set(np.tolist(train_df['userId'])), iid=np.full((item_id)), verbose= False)
         movie_pred_df['prediction'] = movie_pred_df.apply(lambda x : model.predict(uid = x['userId'], iid= item_id)[3], axis=1)
     except Exception as e:
         print(e)
-    # for ui in A_TRAIN.all_users():
-    #     predictions.append(model.predict(iid=item_id,uid=ui, verbose = False))
     return movie_pred_df
 
 def pred_movies(movie_list_ids):
@@ -100,12 +87,8 @@ def pred_movies(movie_list_ids):
         User-ID's of users with similar high ratings for each movie.
 
     """
-    # Store the id of users
-    # id_store=[]
-
     # For each movie selected by a user of the app,
     # predict a corresponding user within the dataset with the highest rating
-    # movie_list_ids = [movies_df.loc[movies_df['title']== movie,'movieId'].item() for movie in movie_list] 
     filter_train_df = train_df.loc[(train_df['movieId'].isin(movie_list_ids)) \
                                  & (train_df['rating'] > 3) ,:]
 
@@ -125,22 +108,15 @@ def pred_movies(movie_list_ids):
     id_store_df = pd.DataFrame()
 
     for i in movie_list_ids:
-        print(f"Time:{time.asctime(time.localtime())} : Start Predictions for {i}")
-
         #Filter Train_df based on the ratings. ie. only consider users
         # a >3 rating for the selected movies
 
         prediction_df = prediction_item(item_id = i,
                                         filter_train_df= filter_train_df)
-
-        # predictions = prediction_df['prediction']
-        # predictions = prediction_item(item_id = i)
+                                        
         prediction_df.sort_values('prediction', ascending= False, inplace= True)
-        # predictions.sort(key=lambda x: x.est, reverse=True)
 
         prediction_df.reset_index(drop= True, inplace= True)
-
-        print(f"Time:{time.asctime(time.localtime())} : Complete Predictions for {i}")
 
         # Take the top 10 user id's from each movie with highest rankings
         # for pred in predictions[:10]:
@@ -179,27 +155,16 @@ def collab_model(movie_list,top_n):
             .sort_values('rating_sum', ascending= False) \
             .iloc[0].name
 
-    # MOVIE_INDICES = pd.Series(movies_df['title']) #MOVIE_INDICES- pandas series of the Movie titles
-    sim_user_ids = pred_movies(movie_list_ids)['userId'].tolist()   #sim_user_ids- holds a list of userIDs who rated the selected movies highly
+    sim_user_ids = pred_movies(movie_list_ids)['userId'].tolist() 
 
     if ideal_sim_user not in sim_user_ids:
         sim_user_ids.append(ideal_sim_user)
-    # df_init_users = ratings_df[ratings_df['userId']==sim_user_ids[0]]      #initializes the df_init_users DF
-    df_init_users = pd.DataFrame()      #initializes the df_init_users DF
-    print(f"Time:{time.asctime(time.localtime())} : Start Init Iteration")
+    df_init_users = pd.DataFrame()   
 
 
     df_init_users = train_df.loc[train_df['userId'].isin(sim_user_ids),:]
-    # for i in sim_user_ids:                                                #for each userID in movies_id,
-    #     df_init_users=df_init_users.append(train_df[train_df['userId']==i]) #Append their ratings to the df_init_users DF
+    
     util_matrix = pd.pivot_table(df_init_users, index= 'userId', columns= 'movieId', values= 'rating')
-    print(f"Time:{time.asctime(time.localtime())} : Finished Init Iteration")
-
-
-    #------------------------ 220430
-
-    #Normalize each row
-    print(f"Time:{time.asctime(time.localtime())} : Creating Utility & Sparse Matrices")
 
     util_matrix_norm = util_matrix.apply(lambda x: (x - np.mean(x))/(np.max(x) - np.min(x)), axis= 1)
     util_matrix_norm.fillna(0, inplace= True)
@@ -214,10 +179,6 @@ def collab_model(movie_list,top_n):
                            index = util_matrix_norm.columns,
                            columns = util_matrix_norm.columns)
 
-    print(f"Time:{time.asctime(time.localtime())} : Completed Creating Utility & Sparse Matrices")
-
-
-    print(f"Time:{time.asctime(time.localtime())} : Selecting Similar Users")
 
     fav_sim_users_movies = []
     for user in sim_users_df.sort_values(by= ideal_sim_user, ascending= False).index:
@@ -231,16 +192,9 @@ def collab_model(movie_list,top_n):
 
     sort_favs = sorted(tally_favs.items(), key= operator.itemgetter(1), reverse= True)
 
-    print(f"Time:{time.asctime(time.localtime())} : Developing Recommendations")
-
 
     top_ten_recommends = [movies_df.loc[movies_df['movieId']== tallied_movie[0],'title'].item() \
                      for tallied_movie in sort_favs[:11] \
                         if movies_df.loc[movies_df['movieId']== tallied_movie[0],'title'].item() not in movie_list]
-
-    print(f"Time:{time.asctime(time.localtime())} : Completed developing Recommendations")
-        
-
-    # End of Working Code
 
     return top_ten_recommends
