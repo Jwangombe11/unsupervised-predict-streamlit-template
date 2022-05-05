@@ -43,6 +43,15 @@ from recommenders.content_based import content_model
 # Streamlit dependencies
 from PIL import Image		#Importing logo Image
 
+
+MOVIES_DF = pd.read_csv('resources/data/movies.csv')
+MOVIES_DF.dropna(inplace= True)
+TITLE_LIST = MOVIES_DF['title'].tolist()
+TRAIN_DF = pd.read_csv('~/data/train.csv')
+TRAIN_DF.drop(['timestamp'], axis=1,inplace=True)
+SVD_MODEL = pickle.load(open('../data/220422_svd.pkl', 'rb'))
+
+
 #-------------------------------------------------------------------
 #START
 #-------------------------------------------------------------------
@@ -53,35 +62,9 @@ clip_art = Image.open('resources/imgs/EDSA_logo.png')
 
 # App declaration
 def main():
-    # Load Datasets
-    @st.experimental_singleton
-    def load_datasets():
-        global TITLE_LIST, TRAIN_DF, MOVIES_DF
-
-        # print(f"Time:{time.asctime(time.localtime())} : Start loading DataFrames")
-        # MOVIES_DF = pd.read_feather('resources/data/movies.feather')
-        MOVIES_DF = pd.read_csv('resources/data/movies.csv')
-        MOVIES_DF.dropna(inplace= True)
-        TITLE_LIST = MOVIES_DF['title'].tolist()
-        # TRAIN_DF = pd.read_feather('resources/data/train.feather')
-        TRAIN_DF = pd.read_csv('~/data/train.csv')
-        TRAIN_DF.drop(['timestamp'], axis=1,inplace=True)
-
-        # print(f"Time:{time.asctime(time.localtime())} : Start loading Model")
-        # SVD_MODEL = pickle.load(open('resources/models/220422_svd.pkl', 'rb'))
-        SVD_MODEL = pickle.load(open('../data/220422_svd.pkl', 'rb'))
-
-        # print(f"Time:{time.asctime(time.localtime())} : Completed Loading Static Files")
-
-
-        return TITLE_LIST,TRAIN_DF,MOVIES_DF,SVD_MODEL
-
-    
-    # global TITLE_LIST, TRAIN_DF, MOVIES_DF
-    TITLE_LIST, TRAIN_DF, MOVIES_DF,SVD_MODEL = load_datasets()
-
     page_options = ["Recommender System","Project Overview","Solution Overview"]
     page_selection = st.sidebar.selectbox("Choose Option", page_options)
+    
     if page_selection == "Recommender System":
 
         # DO NOT REMOVE the 'Recommender System' option below, however,
@@ -169,22 +152,6 @@ def main():
             st.write("Describe your winning approach on this page")
 
         # You may want to add more sections here for aspects such as an EDA,
-    # or to provide your business pitch.
-
-    #Dict of available pages to browse on the application
-    # BROWSE_PAGES = {
-    #     'Recommender System': recommender_system,
-    #     'Project Overview': project_overview,
-    #     'Solution Overview': solution_overview
-    # }
-
-	# #Page Navigation Title & Radio BUttons
-    # st.sidebar.title('Navigation')
-    # page = st.sidebar.radio('Go to:', list(BROWSE_PAGES.keys()))
-
-	# #Load function depending on radio selected above.
-	# #Used to navigate through pages
-    # BROWSE_PAGES[page]()
 
 if __name__ == '__main__':
     main()
