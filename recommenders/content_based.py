@@ -34,10 +34,9 @@ from scipy.sparse import load_npz
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Importing data
-movies = pd.read_csv('../resources/data/movies.csv')
-movies_vec = load_npz('../resources/data/movies_vec.npz')
-# ratings = pd.read_csv('resources/data/ratings.csv')
-# movies.dropna(inplace=True)
+
+movies = pd.read_csv('resources/data/movies.csv')
+movies_vec = load_npz('resources/data/movies_vec.npz')
 
 def data_preprocessing(subset_size):
     """Prepare data for use within Content filtering algorithm.
@@ -62,6 +61,59 @@ def data_preprocessing(subset_size):
 # !! DO NOT CHANGE THIS FUNCTION SIGNATURE !!
 # You are, however, encouraged to change its content.  
 def content_model(movie_list,top_n=10):
+    """Performs Content filtering based upon a list of movies supplied
+       by the app user.
+
+    Parameters
+    ----------
+    movie_list : list (str)
+        Favorite movies chosen by the app user.
+    top_n : type
+        Number of top recommendations to return to the user.
+
+    Returns
+    -------
+    list (str)
+        Titles of the top-n movie recommendations to the user.
+
+    """# Initializing the empty list of recommended movies
+    recommended_movies = []
+    indices = pd.Series(movies['title'])
+    
+    index = []
+
+    for movie in movie_list:
+        index.append(indices[indices == movie].index[0])
+        
+    # create a user profile using the average of the movie features
+    profile = movies_vec[index[0]]
+
+  
+    # get an array of similarities
+    similarity_1 = cosine_similarity(movies_vec, movies_vec[index[0]]).reshape(1,-1)[0]
+    similarity_2 = cosine_similarity(movies_vec, movies_vec[index[1]]).reshape(1,-1)[0]
+    similarity_3 = cosine_similarity(movies_vec, movies_vec[index[2]]).reshape(1,-1)[0]
+    # convert to a pandas series and sort the resulting series in descending order
+    similarity_1 = pd.Series(similarity_1, index=movies.title)
+    similarity_2 = pd.Series(similarity_2, index=movies.title)
+    similarity_3 = pd.Series(similarity_3, index=movies.title)
+    # combine to form one series
+    listings = similarity_1.append(similarity_2).append(similarity_3).sort_values(ascending = False)
+    # remove the movies selected by the user from the top matches
+    forbidden = set(movie_list)
+    similar_movies = listings.index.to_numpy()
+    count = 0
+    for i in range(200):
+        if similar_movies[i] in forbidden:
+            continue
+        recommended_movies.append(similar_movies[i])
+        count = count + 1
+
+        if count == top_n:
+            break
+    return recommended_movies
+
+def content_model_2(movie_list,top_n=10):
     """Performs Content filtering based upon a list of movies supplied
        by the app user.
 
