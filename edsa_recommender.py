@@ -18,10 +18,6 @@ The content is under the GNU icense & is free-to-use.
 # Streamlit dependencies
 import streamlit as st
 
-import traceback
-import pickle
-import time
-
 # Data handling dependencies
 import pandas as pd
 import numpy as np
@@ -30,26 +26,17 @@ import numpy as np
 from utils.data_loader import load_movie_titles
 from recommenders.collaborative_based import collab_model
 from recommenders.content_based import content_model
+from pages import project_overview, solution_overview, meet_the_team
 
-# Streamlit dependencies
-from PIL import Image	
-
-# MOVIES_DF = pd.read_csv('resources/data/movies.csv')
-# MOVIES_DF.dropna(inplace= True)
-# TITLE_LIST = MOVIES_DF['title'].tolist()
 # Data Loading
 title_list = load_movie_titles('resources/data/movies.csv')
-
-
-# Load Website's photo clip art
-clip_art = Image.open('resources/imgs/EDSA_logo.png') 
 
 # App declaration
 def main():
 
     # DO NOT REMOVE the 'Recommender System' option below, however,
     # you are welcome to add more options to enrich your app.
-    page_options = ["Recommender System","Project Overview","Solution Overview"]
+    page_options = ["Recommender System", "Project Overview", "Solution Overview", "Meet the team"]
     
     # -------------------------------------------------------------------
     # ----------- !! THIS CODE MUST NOT BE ALTERED !! -------------------
@@ -101,33 +88,13 @@ def main():
                               We'll need to fix it!")
 
     if page_selection == "Project Overview":
-        st.title('Movie Recommendation System')
-        st.markdown('---')
-        st.subheader('Developed by JitT Inc. - Team 7')
+        project_overview()
 
-        col1, col2, col3 = st.columns([1,8,1])
-        with col1:
-            pass
-        with col2:
-            # st.markdown('---')
-            st.markdown('### Development Team')
-            team_members = Image.open('resources/imgs/landing_page_sample.png')
-            st.image(team_members)
-
-        with col3:
-            pass
-			
-        st.markdown('## Introduction')
-        st.markdown('---')
-
-    # -------------------------------------------------------------------
     if page_selection == "Solution Overview":
-        # ------------- SAFE FOR ALTERING/EXTENSION -------------------
-        # if page_selection == "Solution Overview":
-            st.title("Solution Overview")
-            st.write("Describe your winning approach on this page")
+        solution_overview()
 
-        # You may want to add more sections here for aspects such as an EDA,
+    if page_selection == "Meet the team":
+        meet_the_team()
 
 if __name__ == '__main__':
     main()

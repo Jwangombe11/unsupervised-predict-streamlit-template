@@ -34,8 +34,8 @@ from scipy.sparse import load_npz
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Importing data
-movies = pd.read_csv('resources/data/movies.csv')
-movies_vec = load_npz('resources/data/movies_vec.npz')
+# movies = pd.read_csv('resources/data/movies.csv')
+# movies_vec = load_npz('resources/data/movies_vec.npz')
 
 def data_preprocessing(subset_size):
     """Prepare data for use within Content filtering algorithm.
