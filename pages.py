@@ -14,14 +14,19 @@ def project_overview():
         
     st.markdown('## some data we had to work with')
     st.image('resources/imgs/data.png')
+    st.markdown(get_markdown('resources/markdowns/project_overview/data.md'))
 
     st.markdown('## A little indepth look')
     st.image('resources/imgs/most_generes.png')
+    st.markdown(get_markdown('resources/markdowns/project_overview/key_insight_1.md'))
     st.image('resources/imgs/rating_distribution.png')
+    st.markdown(get_markdown('resources/markdowns/project_overview/key_insight_2.md'))
     st.image('resources/imgs/movies_by_year.png')
+    st.markdown(get_markdown('resources/markdowns/project_overview/key_insight_3.md'))
 
     st.markdown('## Our plans for the future')
     st.image('resources/imgs/future_development.png')
+    st.markdown(get_markdown('resources/markdowns/project_overview/future_plans.md'))
 
 def solution_overview():
     st.title("Solution Overview")
