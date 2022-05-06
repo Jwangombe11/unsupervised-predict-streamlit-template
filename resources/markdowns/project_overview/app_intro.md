@@ -1,4 +1,6 @@
-### hello from the team
+### Hello from the team
 
-this is a change made by ikechukuw
-and now some more text are added
+ChillFlix is an amazing product that gives you an opportunity to choose your chill based on your taste.
+
+**"Your Chill, Your Taste"**
+
