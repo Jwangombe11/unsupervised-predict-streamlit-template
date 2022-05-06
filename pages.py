@@ -10,7 +10,7 @@ def project_overview():
     st.title('CHILLFLIX')
     st.subheader('Developed by JitT Inc. - Team 7')
     st.image('resources/imgs/app_name.png')
-    st.markdown(get_markdown('resources/markdowns/project_overview/team_intro.md'))
+    st.markdown(get_markdown('resources/markdowns/project_overview/app_intro.md'))
         
     st.markdown('## some data we had to work with')
     st.image('resources/imgs/data.png')
@@ -37,7 +37,8 @@ def solution_overview():
 def meet_the_team():
     st.title("The team")
     st.image('resources/imgs/team.png')
-    st.write("Describe your winning approach on this page")
+    st.markdown(get_markdown('resources/markdowns/meet_the_team/team.md'))
+
 
 def get_markdown(file_name):
     with open(file_name, 'r') as file:
