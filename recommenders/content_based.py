@@ -34,6 +34,7 @@ from scipy.sparse import load_npz
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Importing data
+
 movies = pd.read_csv('resources/data/movies.csv')
 movies_vec = load_npz('resources/data/movies_vec.npz')
 
@@ -86,6 +87,7 @@ def content_model(movie_list,top_n=10):
         
     # create a user profile using the average of the movie features
     profile = movies_vec[index[0]]
+
   
     # get an array of similarities
     similarity_1 = cosine_similarity(movies_vec, movies_vec[index[0]]).reshape(1,-1)[0]
