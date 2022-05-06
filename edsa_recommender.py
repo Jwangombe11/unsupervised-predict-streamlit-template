@@ -15,12 +15,6 @@ Official Presentation Link:	https://docs.google.com/presentation/d/1-AIbZcDdUDmv
 The content is under the GNU icense & is free-to-use.
 
 """
-
-#for debugging
-# import ptvsd
-# ptvsd.enable_attach(address=('localhost', 5678))
-# ptvsd.wait_for_attach() # Only include this line if you always wan't to attach the debugger
-
 # Streamlit dependencies
 import streamlit as st
 
@@ -32,122 +26,37 @@ import numpy as np
 from utils.data_loader import load_movie_titles
 from recommenders.collaborative_based import collab_model
 from recommenders.content_based import content_model
+from pages import project_overview, solution_overview, meet_the_team
 
-#Plotting of Graphs
-import plotly.express as px
-
-# Streamlit dependencies
-import joblib,os			#Loading the model & accessing OS File System
-from PIL import Image		#Importing logo Image
-from io import BytesIO		#Buffering Images
-import asyncio
-
-
-
-
-
-#-------------------------------------------------------------------
-#START
-#-------------------------------------------------------------------
-
-
-# Load Website's photo clip art
-clip_art = Image.open('resources/imgs/EDSA_logo.png') 
-
-#Set the Pages Initial Configuration Settings
-st.set_page_config(page_title= 'JitT Inc.: Movie Recommendation System',
-					page_icon= clip_art,
-					layout="wide",
-					menu_items = {
-							'Report a Bug': 'https://www.google.com'
-					})
-
-
-
-
-
-
-
+# Data Loading
+title_list = load_movie_titles('resources/data/movies.csv')
 
 # App declaration
 def main():
 
-
-
-    # Load Datasets
-    @st.experimental_singleton
-    def load_datasets():
-        global TITLE_LIST, TRAIN_DF, MOVIES_DF
-        MOVIES_DF = pd.read_feather('resources/data/movies.feather')
-        TITLE_LIST = MOVIES_DF['title'].tolist()
-        TRAIN_DF = pd.read_feather('resources/data/train.feather')
-        return TITLE_LIST,TRAIN_DF,MOVIES_DF
-
+    # DO NOT REMOVE the 'Recommender System' option below, however,
+    # you are welcome to add more options to enrich your app.
+    page_options = ["Recommender System", "Project Overview", "Solution Overview", "Meet the team"]
     
-    # global TITLE_LIST, TRAIN_DF, MOVIES_DF
-    TITLE_LIST, TRAIN_DF, MOVIES_DF = load_datasets()
-
-
-
-
-
-    # Load Models
-    @st.experimental_singleton
-    def load_models():
-        pass
-
-    # Read Markdown files
-    def load_markdown(file):
-        return Path(file).read_text()
-
-
-
-    def project_overview():
-        st.title('Movie Recommendation System')
-        st.markdown('---')
-        st.subheader('Developed by JitT Inc. - Team 7')
-
-        col1, col2, col3 = st.columns([1,8,1])
-        with col1:
-            pass
-        with col2:
-            # st.markdown('---')
-            st.markdown('### Development Team')
-            team_members = Image.open('resources/imgs/landing_page_sample.png')
-            st.image(team_members)
-
-        with col3:
-            pass
-			
-        st.markdown('## Introduction')
-        st.markdown('---')
-
-
-    def recommender_system():
-
-        # DO NOT REMOVE the 'Recommender System' option below, however,
-        # you are welcome to add more options to enrich your app.
-        page_options = ["Recommender System","Solution Overview"]
-
-        # -------------------------------------------------------------------
-        # ----------- !! THIS CODE MUST NOT BE ALTERED !! -------------------
-        # -------------------------------------------------------------------
-        # page_selection = st.sidebar.selectbox("Choose Option", page_options)
-        # if page_selection == "Recommender System":
+    # -------------------------------------------------------------------
+    # ----------- !! THIS CODE MUST NOT BE ALTERED !! -------------------
+    # -------------------------------------------------------------------
+    page_selection = st.sidebar.selectbox("Choose Option", page_options)
+    if page_selection == "Recommender System":
         # Header contents
         st.write('# Movie Recommender Engine')
         st.write('### EXPLORE Data Science Academy Unsupervised Predict')
         st.image('resources/imgs/Image_header.png',use_column_width=True)
         # Recommender System algorithm selection
         sys = st.radio("Select an algorithm",
-                    ('Content Based Filtering',
+                       ('Content Based Filtering',
                         'Collaborative Based Filtering'))
 
         # User-based preferences
         st.write('### Enter Your Three Favorite Movies')
-        movie_1 = st.selectbox('Fisrt Option',TITLE_LIST[14930:15200])
-        movie_2 = st.selectbox('Second Option',TITLE_LIST[25055:25255])
-        movie_3 = st.selectbox('Third Option',TITLE_LIST[21100:21200])
+        movie_1 = st.selectbox('Fisrt Option',title_list[14930:15200])
+        movie_2 = st.selectbox('Second Option',title_list[25055:25255])
+        movie_3 = st.selectbox('Third Option',title_list[21100:21200])
         fav_movies = [movie_1,movie_2,movie_3]
 
         # Perform top-10 movie recommendation generation
@@ -161,63 +70,31 @@ def main():
                     for i,j in enumerate(top_recommendations):
                         st.subheader(str(i+1)+'. '+j)
                 except:
-                    st.error("Oops! Looks like this algorithm doesn't work.\
-                            We'll need to fix it!")
+                    st.error("Oops! Looks like this algorithm does't work.\
+                              We'll need to fix it!")
 
 
         if sys == 'Collaborative Based Filtering':
             if st.button("Recommend"):
-                breakpoint()
                 try:
                     with st.spinner('Crunching the numbers...'):
                         top_recommendations = collab_model(movie_list=fav_movies,
-                                                        top_n=10)
+                                                           top_n=10)
                     st.title("We think you'll like:")
                     for i,j in enumerate(top_recommendations):
                         st.subheader(str(i+1)+'. '+j)
-                except Exception as ex:
-                    _exstr = 'Exception Type: {0}. \n Args: \n {1!r}'
-                    _msg = _exstr.format(type(ex).__name__,ex.args)
-                    st.error(_msg)
+                except:
+                    st.error("Oops! Looks like this algorithm does't work.\
+                              We'll need to fix it!")
 
-                    # st.error("Oops! Looks like this algorithm does't work.\
-                    #         We'll need to fix it!")
+    if page_selection == "Project Overview":
+        project_overview()
 
+    if page_selection == "Solution Overview":
+        solution_overview()
 
-    # -------------------------------------------------------------------
-    def solution_overview():
-        # ------------- SAFE FOR ALTERING/EXTENSION -------------------
-        # if page_selection == "Solution Overview":
-            st.title("Solution Overview")
-            st.write("Describe your winning approach on this page")
-
-        # You may want to add more sections here for aspects such as an EDA,
-    # or to provide your business pitch.
-
-    #Dict of available pages to browse on the application
-    BROWSE_PAGES = {
-        'Project Overview': project_overview,
-        'Recommender System': recommender_system,
-        'Solution Overview': solution_overview
-    }
-
-	#Page Navigation Title & Radio BUttons
-    st.sidebar.title('Navigation')
-    page = st.sidebar.radio('Go to:', list(BROWSE_PAGES.keys()))
-
-	#Load function depending on radio selected above.
-	#Used to navigate through pages
-    BROWSE_PAGES[page]()
-
-    load_datasets()
-
-    # asyncio.run(load_datasets())
-
-
-
-
-
-
+    if page_selection == "Meet the team":
+        meet_the_team()
 
 if __name__ == '__main__':
     main()
