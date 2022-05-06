@@ -12,27 +12,32 @@ def project_overview():
     st.image('resources/imgs/app_name.png')
     st.markdown(get_markdown('resources/markdowns/project_overview/app_intro.md'))
         
-    st.markdown('## some data we had to work with')
+    st.markdown('## The Data')
     st.image('resources/imgs/data.png')
     st.markdown(get_markdown('resources/markdowns/project_overview/data.md'))
-
-    st.markdown('## A little indepth look')
+    st.markdown('## A deeper dive')
+    st.write('-----------')
     st.image('resources/imgs/most_generes.png')
     st.markdown(get_markdown('resources/markdowns/project_overview/key_insight_1.md'))
+    st.write('-----------')
     st.image('resources/imgs/rating_distribution.png')
     st.markdown(get_markdown('resources/markdowns/project_overview/key_insight_2.md'))
+    st.write('-----------')
     st.image('resources/imgs/movies_by_year.png')
     st.markdown(get_markdown('resources/markdowns/project_overview/key_insight_3.md'))
-
+    st.write('-----------')
     st.markdown('## Our plans for the future')
     st.image('resources/imgs/future_development.png')
     st.markdown(get_markdown('resources/markdowns/project_overview/future_plans.md'))
 
 def solution_overview():
     st.title("Solution Overview")
-    st.write("Describe your winning approach on this page")
+    st.markdown(get_markdown('resources/markdowns/solution_overview/intro.md'))
     st.image('resources/imgs/models.png')
+    st.write('-----------')
+    st.markdown(get_markdown('resources/markdowns/solution_overview/model_performance.md'))
     st.image('resources/imgs/model_performance.png')
+
 
 def meet_the_team():
     st.title("The team")

@@ -36,11 +36,11 @@ import scipy as sp
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
 
-# train_df = pd.read_csv('~/data/train.csv')
-# train_df.drop(['timestamp'], axis=1,inplace=True)
-# model = pickle.load(open('resources/models/220422_svd.pkl', 'rb'))
-# movies_df = pd.read_csv('resources/data/movies.csv')
-# movies_df.dropna(inplace= True)
+train_df = pd.read_csv('~/data/train.csv')
+train_df.drop(['timestamp'], axis=1,inplace=True)
+model = pickle.load(open('resources/models/220422_svd.pkl', 'rb'))
+movies_df = pd.read_csv('resources/data/movies.csv')
+movies_df.dropna(inplace= True)
 
 def prediction_item(item_id, filter_train_df):
     """Map a given favourite movie to users within the
